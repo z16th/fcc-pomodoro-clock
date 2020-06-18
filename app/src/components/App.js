@@ -1,26 +1,73 @@
 import React from 'react';
+import { capitalize, secondsToMMSS } from '../utils/utils'
 import './App.css';
 
-const capitalize = (str) => {
-  return str[0].toUpperCase() + str.slice(1)
+const defaultBreak = 5*60
+const defaultSession = 25*60
+
+export default function App() {
+  const [ currentBreakTime, setBreakTime ] = React.useState(defaultBreak)
+  const [ currentSessionTime, setSessionTime ] = React.useState(defaultSession)
+  const [ timer, setTimer ] = React.useState(defaultSession)
+
+  const resetDefaults = () => {
+    console.log('defaults restored')
+    setBreakTime(defaultBreak)
+    setSessionTime(defaultSession)
+    setTimer(defaultSession)
+  }
+
+  return (
+    <div className="App">
+      <Controller 
+        label='break' 
+        state={currentBreakTime}
+        modifier={setBreakTime}
+      />
+      <Controller
+       label='session'
+       state={currentSessionTime}
+       modifier={setSessionTime}
+       setTime={(value) => setTimer(value)}
+      />
+      <Timer 
+        time={timer} 
+        setTime={(value) => setTimer(value)} 
+        breakTime={currentBreakTime}
+        sessionTime={currentSessionTime} 
+        resetDefaults={resetDefaults}
+      />
+      <Alarm 
+        time={timer} 
+      />
+    </div>
+  );
 }
 
-const secondsToMinutes = (time) => {
-  return time / 60
+function Alarm({ time }){
+  const audioRef = React.useRef(null)
+
+  React.useEffect(() => {
+    if(time > 0 && audioRef.current.currentTime !== 0){
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+  })
+
+  React.useEffect(() => {
+    if(time === 0){
+      if(audioRef.current){
+        audioRef.current.currentTime = 0
+        audioRef.current.play()
+      }
+    }
+  })
+  return(
+    <audio id='beep' src='https://z16th-bucket.s3-us-west-1.amazonaws.com/fcc-projects/alarm-sound-min.mp3' ref={audioRef} />
+  )
 }
 
-const secondsToMMSS = (time) => {
-  let minutes = Math.floor(time / 60)
-  let seconds = time % 60
-  if(minutes < 10)
-    minutes = '0' + minutes
-  if(seconds < 10)
-    seconds = '0' + seconds
-  return `${minutes}:${seconds}`
-}
-
-function Controller({label, state, modifier, setTime}){
-
+function Controller({ label, state, modifier, setTime }){
   const handleClick = (value) => {
     if(state + value > 0 && state + value <= 60*60){
       modifier(state => (state + value))
@@ -45,44 +92,46 @@ function Controller({label, state, modifier, setTime}){
   )
 }
 
-function Timer({time, setTime, breakTime, sessionTime, onABreak, setOnABrake, resetDefaults}){
+function Timer({ time, setTime, breakTime, sessionTime, resetDefaults }){
   const [ isTicking, setIsTicking ] = React.useState(false)
+  const [ isOnBreak, setIsOnBreak ] = React.useState(false)
+  React.useEffect(() => {
+    if(time === 0 && isOnBreak){
+        setTime(sessionTime)
+        setIsOnBreak(false)
+    }
+  },[time,setTime,sessionTime,isOnBreak])
+
+  React.useEffect(() => {
+    if(time === 0 && !isOnBreak){
+      setTime(breakTime)
+      setIsOnBreak(true)
+    }
+  },[time,setTime,breakTime,isOnBreak])
 
   React.useEffect(() =>{
     let id = null;
-    if(isTicking){
       id = setInterval(() => {
-        if(time > 0)
+        if(time > 0 && isTicking)
           setTime( time => time - 1)
-
-        if(time === 0){
-          if(onABreak){
-            setOnABrake(false)
-            setTime(sessionTime)
-          }else{
-            setOnABrake(true)
-            setTime(breakTime)
-          }
-        }
       }, 1000);  
-    }
     return () => clearInterval(id)
-  },[breakTime,isTicking,onABreak,sessionTime,setOnABrake,setTime,time])
+  },[time,setTime,isTicking])
 
   const handleStartStop = () => {
     setIsTicking(ticking => !ticking)
   }
 
-  const handleReset = () => {
-    setIsTicking(false)
-    setOnABrake(false)
+  const handleReset = () => { 
     resetDefaults()
+    setIsTicking(false)
+    setIsOnBreak(false)
   }
 
   return(
     <div className='timer'>
       <div id='timer-label'>
-        {!onABreak ? "Current Session" : "On A Break"}
+        {!isOnBreak ? "Current Session" : "On A Break"}
       </div>
       <div id='time-left'>
         {secondsToMMSS(time)}
@@ -91,45 +140,4 @@ function Timer({time, setTime, breakTime, sessionTime, onABreak, setOnABrake, re
       <div id='reset' onClick={handleReset}> reset </div>
     </div>
   )
-}
-
-export default function App() {
-  const defaultBreak = 5*60
-  const defaultSession = 25*60
-  const [ breakTime, setBreakTime ] = React.useState(defaultBreak)
-  const [ sessionTime, setSessionTime ] = React.useState(defaultSession)
-  const [ time, setTime ] = React.useState(sessionTime)
-  const [ onABreak, setOnABrake ] = React.useState(false)
-
-  const resetDefaults = () => {
-    console.log('defaults restored')
-    setBreakTime(defaultBreak)
-    setSessionTime(defaultSession)
-    setTime(defaultSession)
-  }
-
-  return (
-    <div className="App">
-      <Controller 
-        label='break' 
-        state={breakTime}
-        modifier={setBreakTime}
-      />
-      <Controller
-       label='session'
-       state={sessionTime}
-       modifier={setSessionTime}
-       setTime={(value) => setTime(value)}
-      />
-      <Timer 
-        time={time} 
-        setTime={(value) => setTime(value)} 
-        breakTime={breakTime}
-        sessionTime={sessionTime} 
-        onABreak={onABreak}
-        setOnABrake={setOnABrake}
-        resetDefaults={resetDefaults}
-      />
-    </div>
-  );
 }
