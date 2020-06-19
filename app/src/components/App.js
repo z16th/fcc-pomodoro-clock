@@ -1,47 +1,55 @@
 import React from 'react';
 import './App.css';
-import { capitalize, secondsToMMSS } from '../utils/utils' 
+import { capitalize, secondsToMinutes, secondsToMMSS } from '../utils/utils' 
 
 const defaultBreakTime = 5*60
 const defaultSessionTime = 25*60
 
+const START_TICKING = 'START_TICKING'
+const STOP_TICKING = 'STOP_TICKING'
+const START_BREAK = 'START_BREAK'
+const STOP_BREAK = 'STOP_BREAK'
+const START_PLAYING = 'START_PLAYING'
+const STOP_PLAYING = 'STOP_PLAYING'
+const RESET = 'RESET'
+
 function reducer( state, action ){
   switch(action.type){
-    case 'RESET':
+    case RESET:
       return {
         isOnBreak: false,
         isTicking: false,
         isPlaying: false
       }
-    case 'START_BREAK':
+      case START_TICKING:
+        return {
+          ...state,
+          isTicking: true
+        }
+      case STOP_TICKING:
+        return {
+          ...state,
+          isTicking: false,
+        }
+    case START_BREAK:
       return {
+        ...state,
         isOnBreak: true,
-        ...state
       }
-    case 'STOP_BREAK':
+    case STOP_BREAK:
       return {
+        ...state,
         isOnBreak: false,
-        ...state
       }
-    case 'START_TICKING':
+    case START_PLAYING:
       return {
-        isTicking: true,
-        ...state
-      }
-    case 'STOP_TICKING':
-      return {
-        isTicking: true,
-        ...state
-      }
-    case 'START_PLAYING':
-      return {
+        ...state,
         isPlaying: true,
-        ...state
       }
-    case 'STOP_PLAYING':
+    case STOP_PLAYING:
       return {
+        ...state,
         isPlaying: false,
-        ...state
       }
     default:
       return {
@@ -77,18 +85,34 @@ export default function App() {
     return () => clearInterval(id.current)
   },[trackers.isTicking])
 
-  const handleStartStop = () => {
-    console.log('start-stop clicked');
-    if(!trackers.isTicking)
-    dispatch({ type: 'START_TICKING'})    
-    if(trackers.isTicking){
-      dispatch({ type: 'STOP_TICKING'})
+  React.useEffect(() => {
+    if(timeLeft === 0){
+      if(!trackers.isOnBreak){
+        dispatch({ type: START_BREAK })
+        setTimeLeft(breakTime)
+      }else{
+        dispatch({ type: STOP_BREAK })
+        setTimeLeft(sessionTime)
+      }
     }
+  },[timeLeft, trackers.isOnBreak, breakTime, sessionTime])
 
+  const handleStartStop = () => {
+    if(!trackers.isTicking){
+      dispatch({ type: START_TICKING })
+    }  
+    else if(trackers.isTicking){
+      dispatch({ type: STOP_TICKING})
+    }
   }
 
   const handleReset = () => {
-    dispatch({ type: 'RESET' })
+    console.log('reset clicked');
+    
+    dispatch({ type: RESET })
+    setBreakTime(defaultBreakTime)
+    setSessionTime(defaultSessionTime)
+    setTimeLeft(sessionTime)
   }
 
   return (
@@ -97,31 +121,46 @@ export default function App() {
         label='break'
         state={breakTime}
         modifier={setBreakTime}
-        tracker={trackers.isOnBreak}
+        disableCondition={trackers.isOnBreak}
       />
       <Controller
         label='session'
         state={sessionTime}
         modifier={setSessionTime}
-        tracker={trackers.isTicking}
+        disableCondition={trackers.isTicking}
       />
 
-      <div id='timer-label'>
-        {trackers.isOnBreak ? 'Break Time' : 'Current Session'}
-      </div>
-      <div id='time-left'>{secondsToMMSS(timeLeft)}</div>
-      <div id='start_stop' onClick={handleStartStop}>>[]</div>
-      <div id='reset'>reset</div>
+      <Timer
+        messageCondition={trackers.isOnBreak}
+        timeLeft={timeLeft}
+        handleStartStop={handleStartStop}
+        handleReset={handleReset}
+      />
+
+
 
     </div>
   )
 }
 
-function Controller({ label, state, modifier, tracker }){
+function Timer({ messageCondition, timeLeft, handleStartStop, handleReset }){
+  return (
+    <React.Fragment>
+      <div id='timer-label'>
+        {messageCondition ? 'Break Time' : 'Current Session'}
+      </div>
+      <div id='time-left'>{secondsToMMSS(timeLeft)}</div>
+      <div id='start_stop' onClick={handleStartStop}>>[]</div>
+      <div id='reset' onClick={handleReset}>reset</div>
+    </React.Fragment>
+  )
+}
+
+function Controller({ label, state, modifier, disableCondition }){
   const seconds = 60
 
   const handleClick = (value) => {
-    if(state + value > 0 && state + value <= 60*seconds && !tracker)
+    if(state + value > 0 && state + value <= 60 * seconds && !disableCondition)
       modifier( timer => timer + value)
   }
 
@@ -138,7 +177,7 @@ function Controller({ label, state, modifier, tracker }){
         down
       </div>
       
-      <div id={`${label}-length`}>{secondsToMMSS(state)}</div>
+      <div id={`${label}-length`}>{secondsToMinutes(state)}</div>
       
       <div
         id={`${label}-increment`}
