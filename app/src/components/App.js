@@ -62,7 +62,6 @@ export default function App() {
   const [ breakTime, setBreakTime ] = React.useState(defaultBreakTime)
   const [ sessionTime, setSessionTime ] = React.useState(defaultSessionTime)
   const [ timeLeft, setTimeLeft ] = React.useState(sessionTime)
-  const id = React.useRef(null)
   const [ trackers, dispatch ] = React.useReducer(
     reducer,
     {
@@ -71,6 +70,9 @@ export default function App() {
       isPlaying: false,
     }
   )
+
+  const id = React.useRef(null)
+  const audioRef = React.useRef(null)
 
   React.useEffect(() => {
     setTimeLeft(sessionTime)
@@ -87,6 +89,7 @@ export default function App() {
 
   React.useEffect(() => {
     if(timeLeft === 0){
+      playAudio()
       if(!trackers.isOnBreak){
         dispatch({ type: START_BREAK })
         setTimeLeft(breakTime)
@@ -107,12 +110,22 @@ export default function App() {
   }
 
   const handleReset = () => {
-    console.log('reset clicked');
-    
     dispatch({ type: RESET })
     setBreakTime(defaultBreakTime)
     setSessionTime(defaultSessionTime)
     setTimeLeft(sessionTime)
+    pauseAudio()
+  }
+
+  const pauseAudio = () => {
+    if(!audioRef.current.paused){
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+  }
+
+  const playAudio = () => {
+    audioRef.current.play()
   }
 
   return (
@@ -137,7 +150,7 @@ export default function App() {
         handleReset={handleReset}
       />
 
-
+      <audio id='beep' src='https://z16th-bucket.s3-us-west-1.amazonaws.com/fcc-projects/alarm-sound-min.mp3' ref={audioRef} />
 
     </div>
   )
@@ -169,16 +182,13 @@ function Controller({ label, state, modifier, disableCondition }){
       <div id={`${label}-label`}>
         {capitalize(label)} Length 
       </div>
-      
       <div 
         id={`${label}-decrement`}
         onClick={() => handleClick(-seconds)} 
       >
         down
       </div>
-      
       <div id={`${label}-length`}>{secondsToMinutes(state)}</div>
-      
       <div
         id={`${label}-increment`}
         onClick={() => handleClick(seconds)} 
@@ -186,6 +196,5 @@ function Controller({ label, state, modifier, disableCondition }){
         up
       </div>
     </React.Fragment>
-    
   )
 }
