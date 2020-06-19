@@ -50,6 +50,6 @@
 
 @media (min-width: 416px){
   #time-left{
-    font-size: clamp(64px, 15vw, 144px);
+    font-size: clamp(54px, 10vw, 144px);
   }
 }

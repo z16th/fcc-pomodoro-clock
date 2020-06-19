@@ -2,13 +2,10 @@ const capitalize = (str) => {
   return str[0].toUpperCase() + str.slice(1)
 }
 
-<<<<<<< HEAD
 const secondsToMinutes = (time) => {
   return time / 60
 }
 
-=======
->>>>>>> master
 const secondsToMMSS = (time) => {
   let minutes = Math.floor(time / 60)
   let seconds = time % 60
@@ -19,8 +16,4 @@ const secondsToMMSS = (time) => {
   return `${minutes}:${seconds}`
 }
 
-<<<<<<< HEAD
 export { capitalize, secondsToMinutes, secondsToMMSS }
-=======
-export { capitalize, secondsToMMSS }
->>>>>>> master
