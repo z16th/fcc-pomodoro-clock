@@ -1,0 +1,17 @@
+.controller{
+  flex-direction: column;
+}
+
+.buttons{
+  display: flex;
+  font-size: 2rem;
+}
+
+.btn{
+  margin: 4px;
+}
+
+.btn:active{
+  font-size: 2.2rem;
+  color: rgba(255, 255, 255, 0.425);
+}

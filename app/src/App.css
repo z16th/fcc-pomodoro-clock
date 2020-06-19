@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&display=swap');
+
+.App{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #e1e0de;
+  font-family: 'Noto Serif JP', serif;
+  text-shadow: -2px 0px 0 #373737;
+}
+
+.controllers{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.flex-center{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 416px){
+  .App{
+    width: 50%;
+    height: 100%;
+  }
+}

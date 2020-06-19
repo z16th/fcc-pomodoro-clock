@@ -1,0 +1,55 @@
+.timer{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 10vh 30vh 10vh;
+  grid-template-areas: 
+    "label label"
+    "time time"
+    "play reset";
+  text-align: center;
+  
+}
+
+#timer-label{
+  grid-area: label;
+  font-size: 2rem;
+  color: #5f5e5c;
+  background-color: #e1e0de;
+  padding: 8px;
+  border-radius: 32px 32px 0 0;
+  text-shadow: none;
+}
+
+#time-left{
+  grid-area: time;
+  font-size: 8rem;
+  padding-bottom: 18px;
+  border-radius: 0 0 32px 32px;
+  background-color: #7fbbc5;
+  text-shadow:-6px 2px 0 #c78e70;
+  color: #e1e0de;
+}
+
+#start_stop{
+  grid-area: play;
+  font-size: 2rem;
+}
+
+#reset{
+  grid-area: reset;
+  font-size: 2rem;
+}
+
+#start_stop:active{
+  color: rgba(255, 255, 255, 0.425);
+}
+
+#reset:active{
+  color: rgba(255, 255, 255, 0.425);
+}
+
+@media (min-width: 416px){
+  #time-left{
+    font-size: clamp(64px, 15vw, 144px);
+  }
+}
